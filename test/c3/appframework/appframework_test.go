@@ -79,27 +79,10 @@ var _ = Describe("c3appfw test", func() {
 			Expect(err).To(Succeed(), "Unable to upload apps to S3 test directory")
 			uploadedApps = append(uploadedApps, uploadedFiles...)
 
-			// Create App framework Spec for MC
-			volumeNameMC := "appframework-test-volume-mc-" + testenv.RandomDNSName(3)
-			volumeSpecMC := []enterpriseApi.VolumeSpec{testenv.GenerateIndexVolumeSpec(volumeNameMC, testenv.GetS3Endpoint(), testenvInstance.GetIndexSecretName(), "aws", "s3")}
-
-			// AppSourceDefaultSpec: Remote Storage volume name and Scope of App deployment
-			appSourceDefaultSpecMC := enterpriseApi.AppSourceDefaultSpec{
-				VolName: volumeNameMC,
-				Scope:   enterpriseApi.ScopeLocal,
-			}
-
-			// appSourceSpec: App source name, location and volume name and scope from appSourceDefaultSpec
-			appSourceNameMC := "appframework-mc-" + testenv.RandomDNSName(3)
-			appSourceSpecMC := []enterpriseApi.AppSourceSpec{testenv.GenerateAppSourceSpec(appSourceNameMC, s3TestDirMC, appSourceDefaultSpecMC)}
-
-			// appFrameworkSpec: AppSource settings, Poll Interval, volumes, appSources on volumes
-			appFrameworkSpecMC := enterpriseApi.AppFrameworkSpec{
-				Defaults:             appSourceDefaultSpecMC,
-				AppsRepoPollInterval: 60,
-				VolList:              volumeSpecMC,
-				AppSources:           appSourceSpecMC,
-			}
+			appSpecSuffix := "mc-" + testenv.RandomDNSName(3)
+			appSourceNameMC := "appframework-" + enterpriseApi.ScopeLocal + appSpecSuffix
+			scopeInfo := map[string]string{enterpriseApi.ScopeLocal: s3TestDirMC}
+			appFrameworkSpecMC := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
 
 			// MC AppFramework Spec
 			mcSpec := enterpriseApi.MonitoringConsoleSpec{
@@ -127,31 +110,15 @@ var _ = Describe("c3appfw test", func() {
 			uploadedApps = append(uploadedApps, uploadedFiles...)
 
 			// Create App framework Spec
-			volumeName := "appframework-test-volume-" + testenv.RandomDNSName(3)
-			volumeSpec := []enterpriseApi.VolumeSpec{testenv.GenerateIndexVolumeSpec(volumeName, testenv.GetS3Endpoint(), testenvInstance.GetIndexSecretName(), "aws", "s3")}
-
-			// AppSourceDefaultSpec: Remote Storage volume name and Scope of App deployment
-			appSourceDefaultSpec := enterpriseApi.AppSourceDefaultSpec{
-				VolName: volumeName,
-				Scope:   enterpriseApi.ScopeCluster,
-			}
-
-			// appSourceSpec: App source name, location and volume name and scope from appSourceDefaultSpec
-			appSourceName := "appframework" + testenv.RandomDNSName(3)
-			appSourceSpec := []enterpriseApi.AppSourceSpec{testenv.GenerateAppSourceSpec(appSourceName, s3TestDir, appSourceDefaultSpec)}
-
-			// appFrameworkSpec: AppSource settings, Poll Interval, volumes, appSources on volumes
-			appFrameworkSpec := enterpriseApi.AppFrameworkSpec{
-				Defaults:             appSourceDefaultSpec,
-				AppsRepoPollInterval: 60,
-				VolList:              volumeSpec,
-				AppSources:           appSourceSpec,
-			}
-
 			indexerReplicas := 3
+			appSpecSuffix = testenv.RandomDNSName(3)
+			appSourceName := "appframework-" + enterpriseApi.ScopeCluster + appSpecSuffix
+			scopeInfo = map[string]string{enterpriseApi.ScopeCluster: s3TestDir}
+			appFrameworkSpecIdxc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
+			appFrameworkSpecShc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
 
 			testenvInstance.Log.Info("Deploy Single Site Indexer Cluster")
-			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpec, 10, true)
+			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpecIdxc, appFrameworkSpecShc, 10, true)
 			Expect(err).To(Succeed(), "Unable to deploy Single Site Indexer Cluster with App framework")
 
 			// Ensure that the cluster-manager goes to Ready phase
@@ -303,26 +270,10 @@ var _ = Describe("c3appfw test", func() {
 			uploadedApps = append(uploadedApps, uploadedFiles...)
 
 			// Create App framework Spec for MC
-			volumeNameMC := "appframework-test-volume-mc-" + testenv.RandomDNSName(3)
-			volumeSpecMC := []enterpriseApi.VolumeSpec{testenv.GenerateIndexVolumeSpec(volumeNameMC, testenv.GetS3Endpoint(), testenvInstance.GetIndexSecretName(), "aws", "s3")}
-
-			// AppSourceDefaultSpec: Remote Storage volume name and Scope of App deployment
-			appSourceDefaultSpecMC := enterpriseApi.AppSourceDefaultSpec{
-				VolName: volumeNameMC,
-				Scope:   enterpriseApi.ScopeLocal,
-			}
-
-			// appSourceSpec: App source name, location and volume name and scope from appSourceDefaultSpec
-			appSourceNameMC := "appframework-mc-" + testenv.RandomDNSName(3)
-			appSourceSpecMC := []enterpriseApi.AppSourceSpec{testenv.GenerateAppSourceSpec(appSourceNameMC, s3TestDirMC, appSourceDefaultSpecMC)}
-
-			// appFrameworkSpec: AppSource settings, Poll Interval, volumes, appSources on volumes
-			appFrameworkSpecMC := enterpriseApi.AppFrameworkSpec{
-				Defaults:             appSourceDefaultSpecMC,
-				AppsRepoPollInterval: 60,
-				VolList:              volumeSpecMC,
-				AppSources:           appSourceSpecMC,
-			}
+			appSpecSuffix := "mc-" + testenv.RandomDNSName(3)
+			appSourceNameMC := "appframework-" + enterpriseApi.ScopeLocal + appSpecSuffix
+			scopeInfo := map[string]string{enterpriseApi.ScopeLocal: s3TestDirMC}
+			appFrameworkSpecMC := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
 
 			// MC AppFramework Spec
 			mcSpec := enterpriseApi.MonitoringConsoleSpec{
@@ -344,31 +295,16 @@ var _ = Describe("c3appfw test", func() {
 			testenv.VerifyMonitoringConsoleReady(deployment, deployment.GetName(), mc, testenvInstance)
 
 			// Create App framework Spec for C3
-			volumeName := "appframework-test-volume-" + testenv.RandomDNSName(3)
-			volumeSpec := []enterpriseApi.VolumeSpec{testenv.GenerateIndexVolumeSpec(volumeName, testenv.GetS3Endpoint(), testenvInstance.GetIndexSecretName(), "aws", "s3")}
-
-			// AppSourceDefaultSpec: Remote Storage volume name and Scope of App deployment
-			appSourceDefaultSpec := enterpriseApi.AppSourceDefaultSpec{
-				VolName: volumeName,
-				Scope:   enterpriseApi.ScopeCluster,
-			}
-
-			// appSourceSpec: App source name, location and volume name and scope from appSourceDefaultSpec
-			appSourceName := "appframework" + testenv.RandomDNSName(3)
-			appSourceSpec := []enterpriseApi.AppSourceSpec{testenv.GenerateAppSourceSpec(appSourceName, s3TestDir, appSourceDefaultSpec)}
-
-			// appFrameworkSpec: AppSource settings, Poll Interval, volumes, appSources on volumes
-			appFrameworkSpec := enterpriseApi.AppFrameworkSpec{
-				Defaults:             appSourceDefaultSpec,
-				AppsRepoPollInterval: 60,
-				VolList:              volumeSpec,
-				AppSources:           appSourceSpec,
-			}
+			appSpecSuffix = testenv.RandomDNSName(3)
+			appSourceName := "appframework-" + enterpriseApi.ScopeCluster + appSpecSuffix
+			scopeInfo = map[string]string{enterpriseApi.ScopeCluster: s3TestDir}
+			appFrameworkSpecIdxc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
+			appFrameworkSpecShc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
 
 			indexerReplicas := 3
 
 			testenvInstance.Log.Info("Deploy Single Site Indexer Cluster")
-			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpec, 10, true)
+			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpecIdxc, appFrameworkSpecShc, 10, true)
 			Expect(err).To(Succeed(), "Unable to deploy Single Site Indexer Cluster with App framework")
 
 			// Ensure that the CM goes to Ready phase
@@ -564,32 +500,16 @@ var _ = Describe("c3appfw test", func() {
 			uploadedApps = append(uploadedApps, uploadedFiles...)
 
 			// Create App framework Spec
-			// volumeSpec: Volume name, Endpoint, Path and SecretRef
-			volumeName := "appframework-test-volume-" + testenv.RandomDNSName(3)
-			volumeSpec := []enterpriseApi.VolumeSpec{testenv.GenerateIndexVolumeSpec(volumeName, testenv.GetS3Endpoint(), testenvInstance.GetIndexSecretName(), "aws", "s3")}
-
-			// AppSourceDefaultSpec: Remote Storage volume name and Scope of App deployment
-			appSourceDefaultSpec := enterpriseApi.AppSourceDefaultSpec{
-				VolName: volumeName,
-				Scope:   enterpriseApi.ScopeLocal,
-			}
-
-			// appSourceSpec: App source name, location and volume name and scope from appSourceDefaultSpec
-			appSourceName := "appframework-" + testenv.RandomDNSName(3)
-			appSourceSpec := []enterpriseApi.AppSourceSpec{testenv.GenerateAppSourceSpec(appSourceName, s3TestDir, appSourceDefaultSpec)}
-
-			// appFrameworkSpec: AppSource settings, Poll Interval, volumes, appSources on volumes
-			appFrameworkSpec := enterpriseApi.AppFrameworkSpec{
-				Defaults:             appSourceDefaultSpec,
-				AppsRepoPollInterval: 60,
-				VolList:              volumeSpec,
-				AppSources:           appSourceSpec,
-			}
+			appSpecSuffix := testenv.RandomDNSName(3)
+			appSourceName := "appframework-" + enterpriseApi.ScopeLocal + appSpecSuffix
+			scopeInfo := map[string]string{enterpriseApi.ScopeLocal: s3TestDir}
+			appFrameworkSpecIdxc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
+			appFrameworkSpecShc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
 
 			// Create Single site Cluster and SHC, with App Framework enabled on CM and SHC Deployer
 			indexerReplicas := 3
 			testenvInstance.Log.Info("Deploy Single Site Indexer Cluster")
-			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpec, 10, false)
+			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpecIdxc, appFrameworkSpecShc, 10, false)
 			Expect(err).To(Succeed(), "Unable to deploy Single Site Indexer Cluster with App framework")
 
 			// Ensure that the CM goes to Ready phase
@@ -690,21 +610,10 @@ var _ = Describe("c3appfw test", func() {
 			uploadedApps = append(uploadedApps, uploadedFiles...)
 
 			// Create App framework Spec
-			volumeName := "appframework-test-volume-" + testenv.RandomDNSName(3)
-			volumeSpec := []enterpriseApi.VolumeSpec{testenv.GenerateIndexVolumeSpec(volumeName, testenv.GetS3Endpoint(), testenvInstance.GetIndexSecretName(), "aws", "s3")}
-
-			appSourceDefaultSpec := enterpriseApi.AppSourceDefaultSpec{
-				VolName: volumeName,
-				Scope:   enterpriseApi.ScopeClusterWithPreConfig,
-			}
-			appSourceName := "appframework-" + testenv.RandomDNSName(3)
-			appSourceSpec := []enterpriseApi.AppSourceSpec{testenv.GenerateAppSourceSpec(appSourceName, s3TestDir, appSourceDefaultSpec)}
-			appFrameworkSpec := enterpriseApi.AppFrameworkSpec{
-				Defaults:             appSourceDefaultSpec,
-				AppsRepoPollInterval: 60,
-				VolList:              volumeSpec,
-				AppSources:           appSourceSpec,
-			}
+			appSpecSuffix := testenv.RandomDNSName(3)
+			appSourceName := "appframework-" + enterpriseApi.ScopeClusterWithPreConfig + appSpecSuffix
+			scopeInfo := map[string]string{enterpriseApi.ScopeClusterWithPreConfig: s3TestDir}
+			appFrameworkSpecShc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
 
 			// Create Single site Cluster and SHC, with App Framework enabled on SHC Deployer
 			// Deploy the CM
@@ -735,7 +644,7 @@ var _ = Describe("c3appfw test", func() {
 					},
 				},
 				Replicas:           3,
-				AppFrameworkConfig: appFrameworkSpec,
+				AppFrameworkConfig: appFrameworkSpecShc,
 			}
 			_, err = deployment.DeploySearchHeadClusterWithGivenSpec(deployment.GetName()+"-shc", shSpec)
 			Expect(err).To(Succeed(), "Unable to deploy SHC with App framework")
@@ -800,34 +709,18 @@ var _ = Describe("c3appfw test", func() {
 			uploadedApps = append(uploadedApps, uploadedFiles...)
 
 			// Create App framework Spec
-			volumeName := "appframework-test-volume-" + testenv.RandomDNSName(3)
-			volumeSpec := []enterpriseApi.VolumeSpec{testenv.GenerateIndexVolumeSpec(volumeName, testenv.GetS3Endpoint(), testenvInstance.GetIndexSecretName(), "aws", "s3")}
-			appSourceLocalSpec := enterpriseApi.AppSourceDefaultSpec{
-				VolName: volumeName,
-				Scope:   enterpriseApi.ScopeLocal,
-			}
-			appSourceClusterSpec := enterpriseApi.AppSourceDefaultSpec{
-				VolName: volumeName,
-				Scope:   enterpriseApi.ScopeCluster,
-			}
-			appSourceNameLocal := "appframework-localapps-" + testenv.RandomDNSName(3)
-			appSourceSpecLocal := []enterpriseApi.AppSourceSpec{testenv.GenerateAppSourceSpec(appSourceNameLocal, s3TestDir, appSourceLocalSpec)}
-			appSourceNameCluster := "appframework-clusterapps-" + testenv.RandomDNSName(3)
-			appSourceSpecCluster := []enterpriseApi.AppSourceSpec{testenv.GenerateAppSourceSpec(appSourceNameCluster, s3TestDirCluster, appSourceClusterSpec)}
+			appSpecSuffix := testenv.RandomDNSName(3)
+			appSourceNameLocal := "appframework-" + enterpriseApi.ScopeLocal + appSpecSuffix
+			appSourceNameCluster := "appframework-" + enterpriseApi.ScopeCluster + appSpecSuffix
+			scopeInfo := map[string]string{enterpriseApi.ScopeLocal: s3TestDir, enterpriseApi.ScopeCluster: s3TestDirCluster}
 
-			appSourceSpec := append(appSourceSpecLocal, appSourceSpecCluster...)
-
-			appFrameworkSpec := enterpriseApi.AppFrameworkSpec{
-				Defaults:             appSourceLocalSpec,
-				AppsRepoPollInterval: 60,
-				VolList:              volumeSpec,
-				AppSources:           appSourceSpec,
-			}
+			appFrameworkSpecIdxc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
+			appFrameworkSpecShc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
 
 			// Create Single site Cluster and SHC, with App Framework enabled on CM and SHC Deployer
 			testenvInstance.Log.Info("Create Single site Indexer Cluster with Local and Cluster Install for Apps")
 			indexerReplicas := 3
-			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpec, 10, false)
+			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpecIdxc, appFrameworkSpecShc, 10, false)
 			Expect(err).To(Succeed(), "Unable to deploy Single Site Indexer Cluster with App framework")
 
 			// Ensure that the CM goes to Ready phase
@@ -1030,27 +923,16 @@ var _ = Describe("c3appfw test", func() {
 			uploadedApps = append(uploadedApps, uploadedFiles...)
 
 			// Create App framework Spec
-			volumeName := "appframework-test-volume-" + testenv.RandomDNSName(3)
-			volumeSpec := []enterpriseApi.VolumeSpec{testenv.GenerateIndexVolumeSpec(volumeName, testenv.GetS3Endpoint(), testenvInstance.GetIndexSecretName(), "aws", "s3")}
-
-			appSourceDefaultSpec := enterpriseApi.AppSourceDefaultSpec{
-				VolName: volumeName,
-				Scope:   enterpriseApi.ScopeCluster,
-			}
-			appSourceName := "appframework" + testenv.RandomDNSName(3)
-			appSourceSpec := []enterpriseApi.AppSourceSpec{testenv.GenerateAppSourceSpec(appSourceName, s3TestDir, appSourceDefaultSpec)}
-
-			appFrameworkSpec := enterpriseApi.AppFrameworkSpec{
-				Defaults:             appSourceDefaultSpec,
-				AppsRepoPollInterval: 60,
-				VolList:              volumeSpec,
-				AppSources:           appSourceSpec,
-			}
+			appSpecSuffix := testenv.RandomDNSName(3)
+			appSourceName := "appframework-" + enterpriseApi.ScopeCluster + appSpecSuffix
+			scopeInfo := map[string]string{enterpriseApi.ScopeCluster: s3TestDir}
+			appFrameworkSpecIdxc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
+			appFrameworkSpecShc := testenv.GenerateAppFrameworkSpec(testenvInstance, scopeInfo, appSpecSuffix, 60)
 
 			// Create Single site Cluster and SHC, with App Framework enabled on CM and SHC Deployer
 			testenvInstance.Log.Info("Create Single site Indexer Cluster and SHC with App framework")
 			indexerReplicas := 3
-			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpec, 10, false)
+			err = deployment.DeploySingleSiteClusterWithGivenAppFrameworkSpec(deployment.GetName(), indexerReplicas, true, appFrameworkSpecIdxc, appFrameworkSpecShc, 10, false)
 			Expect(err).To(Succeed(), "Unable to deploy Single Site Indexer Cluster with App framework")
 
 			// Ensure that the CM goes to Ready phase

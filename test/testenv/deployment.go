@@ -585,7 +585,7 @@ func (d *Deployment) DeployLicenseManagerWithGivenSpec(name string, spec enterpr
 }
 
 // DeploySingleSiteClusterWithGivenAppFrameworkSpec deploys indexer cluster (lm, shc optional) with app framework spec
-func (d *Deployment) DeploySingleSiteClusterWithGivenAppFrameworkSpec(name string, indexerReplicas int, shc bool, appFrameworkSpec enterpriseApi.AppFrameworkSpec, delaySeconds int, mc bool) error {
+func (d *Deployment) DeploySingleSiteClusterWithGivenAppFrameworkSpec(name string, indexerReplicas int, shc bool, appFrameworkSpecIdxc enterpriseApi.AppFrameworkSpec, appFrameworkSpecShc enterpriseApi.AppFrameworkSpec, delaySeconds int, mc bool) error {
 
 	licenseMaster := ""
 
@@ -623,7 +623,7 @@ func (d *Deployment) DeploySingleSiteClusterWithGivenAppFrameworkSpec(name strin
 			// LivenessInitialDelaySeconds:  int32(delaySeconds),
 			// ReadinessInitialDelaySeconds: int32(delaySeconds),
 		},
-		AppFrameworkConfig: appFrameworkSpec,
+		AppFrameworkConfig: appFrameworkSpecIdxc,
 	}
 	_, err := d.DeployClusterMasterWithGivenSpec(name, cmSpec)
 	if err != nil {
@@ -655,7 +655,7 @@ func (d *Deployment) DeploySingleSiteClusterWithGivenAppFrameworkSpec(name strin
 			// ReadinessInitialDelaySeconds: int32(delaySeconds),
 		},
 		Replicas:           3,
-		AppFrameworkConfig: appFrameworkSpec,
+		AppFrameworkConfig: appFrameworkSpecShc,
 	}
 	if shc {
 		_, err = d.DeploySearchHeadClusterWithGivenSpec(name+"-shc", shSpec)
