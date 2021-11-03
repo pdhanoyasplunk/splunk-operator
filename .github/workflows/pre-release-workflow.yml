@@ -136,12 +136,12 @@ jobs:
       run: |
         make package
   
-    - name: Tag and Push release RC Image
-      run: |
-        docker images
-        docker tag splunk/splunk-operator:latest splunk/splunk-operator-rc:${{ github.event.inputs.release_version }}-RC
-        docker push splunk/splunk-operator-rc:${{ github.event.inputs.release_version }}-RC
-        docker images
+    # - name: Tag and Push release RC Image
+    #  run: |
+    #    docker images
+    #    docker tag splunk/splunk-operator:latest splunk/splunk-operator-rc:${{ github.event.inputs.release_version }}-RC
+    #    docker push splunk/splunk-operator-rc:${{ github.event.inputs.release_version }}-RC
+    #    docker images
 
     - name: Update Operator Image name in Release Folder
       if: github.event.inputs.old_operator_version != github.event.inputs.new_operator_version
