@@ -24,9 +24,10 @@ on:
         description: 'NEW ENTERPRISE IMAGE VERSION'
         required: true
 jobs:
-  automated-release:
+  automated-pre-release:
     name: Automated Pre Release
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -55,11 +56,11 @@ jobs:
     - name: setup-docker
       uses: docker-practice/actions-setup-docker@v1
 
-    - name: Configure Docker Credentials
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_PUSH_TOKEN}}
+    #- name: Configure Docker Credentials
+    #  uses: docker/login-action@v1
+    #  with:
+    #    username: ${{ secrets.DOCKERHUB_USERNAME }}
+    #    password: ${{ secrets.DOCKERHUB_PUSH_TOKEN}}
     
     - name: Setup Go
       uses: actions/setup-go@v2
@@ -83,73 +84,77 @@ jobs:
 
     - name: Update Operator Version in version.go
       if: github.event.inputs.old_operator_version != github.event.inputs.new_operator_version
-      uses: jacobtomlinson/gha-find-replace@master
+      uses: jacobtomlinson/gha-find-replace@v2
       with:
         find: "${{ github.event.inputs.old_operator_version }}"
         replace: "${{ github.event.inputs.new_operator_version }}"
-        include: "version.go"
+        include: "**version.go"
 
     - name: Update Operator Image name in DOCS
       if: github.event.inputs.old_operator_version != github.event.inputs.new_operator_version
-      uses: jacobtomlinson/gha-find-replace@master
+      uses: jacobtomlinson/gha-find-replace@v2
       with:
         find: "splunk-operator:${{ github.event.inputs.old_operator_version }}"
         replace: "splunk-operator:${{ github.event.inputs.new_operator_version }}"
         exclude: "ChangeLog.md"
-        include: ".*.md"
+        include: "**.md"
 
     - name: Update Splunk Operator Install URL in DOCS
       if: github.event.inputs.old_operator_version != github.event.inputs.new_operator_version
-      uses: jacobtomlinson/gha-find-replace@master
+      uses: jacobtomlinson/gha-find-replace@v2
       with:
         find: "/download/${{ github.event.inputs.old_operator_version }}/splunk-operator"
         replace: "/download/${{ github.event.inputs.new_operator_version }}/splunk-operator"
         exclude: "ChangeLog.md"
-        include: ".*.md"
+        include: "**.md"
 
     - name: Update Splunk Operator VERSION in DOCS
       if: github.event.inputs.old_operator_version != github.event.inputs.new_operator_version
-      uses: jacobtomlinson/gha-find-replace@master
+      uses: jacobtomlinson/gha-find-replace@v2
       with:
         find: "${{ github.event.inputs.old_operator_version }} or later"
         replace: "${{ github.event.inputs.new_operator_version }} or later"
         exclude: "ChangeLog.md"
-        include: ".*.md"
+        include: "**.md"
 
     - name: Update Splunk Enterprise Image in operator.yaml
       if: github.event.inputs.old_enterprise_version != github.event.inputs.new_enterprise_version
-      uses: jacobtomlinson/gha-find-replace@master
+      uses: jacobtomlinson/gha-find-replace@v2
       with:
         find: "${{ github.event.inputs.old_enterprise_version }}"
         replace: "${{ github.event.inputs.new_enterprise_version }}"
-        include: "operator.yaml"
+        include: "**operator.yaml"
 
     - name: Update Splunk Enterprise image in DOCS
       if: github.event.inputs.old_enterprise_version != github.event.inputs.new_enterprise_version
-      uses: jacobtomlinson/gha-find-replace@master
+      uses: jacobtomlinson/gha-find-replace@v2
       with:
         find: "${{ github.event.inputs.old_enterprise_version }} or later"
         replace: "${{ github.event.inputs.new_enterprise_version }} or later"
         exclude: "ChangeLog.md"
+        include: "**.md"
+
+    - name: Check changed GIT files 
+      run: |
+        git status
 
     - name: Run Make Package
       run: |
         make package
   
-    - name: Tag and Push release RC Image
-      run: |
-        docker images
-        docker tag splunk/splunk-operator:latest splunk/splunk-operator-rc:${{ github.event.inputs.release_version }}-RC
-        docker push splunk/splunk-operator-rc:${{ github.event.inputs.release_version }}-RC
-        docker images
+    #- name: Tag and Push release RC Image
+    #  run: |
+    #    docker images
+    #    docker tag splunk/splunk-operator:latest splunk/splunk-operator-rc:${{ github.event.inputs.release_version }}-RC
+    #    docker push splunk/splunk-operator-rc:${{ github.event.inputs.release_version }}-RC
+    #    docker images
 
     - name: Update Operator Image name in Release Folder
-      if: github.event.inputs.old_operator_version != github.event.inputs.new_operator_version
-      uses: jacobtomlinson/gha-find-replace@master
+      uses: jacobtomlinson/gha-find-replace@v2
       with:
         find: "splunk/splunk-operator:${{ env.SHORT_SHA }}"
         replace: "splunk/splunk-operator-rc:${{ github.event.inputs.release_version }}"
-        include: "release-${{ env.SHORT_SHA }}/"
+        include: "release-${{ env.SHORT_SHA }}/**"
 
     - name: Upload Release Artifacts
       uses: actions/upload-artifact@v2
